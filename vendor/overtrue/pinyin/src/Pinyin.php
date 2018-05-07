@@ -64,6 +64,7 @@ class Pinyin
      */
     public function __construct($loaderName = null)
     {
+        // 单引号中的\\是会被转换成\的，其他的（如：\n）则不会转换。
         $this->loader = $loaderName ?: 'Overtrue\\Pinyin\\FileDictLoader';
     }
 
@@ -186,9 +187,9 @@ class Pinyin
      */
     public function getLoader()
     {
+        // 首次进入的时候，$this->loader是个字符串："Overtrue\Pinyin\FileDictLoader"
         if (!($this->loader instanceof DictLoaderInterface)) {
             $dataDir = dirname(__DIR__).'/data/';
-
             $loaderName = $this->loader;
             $this->loader = new $loaderName($dataDir);
         }
@@ -205,10 +206,12 @@ class Pinyin
      */
     protected function prepare($string)
     {
+        // 在字母、数字、下划线的前面加上TAB
         $string = preg_replace_callback('~[a-z0-9_-]+~i', function ($matches) {
             return "\t".$matches[0];
         }, $string);
 
+        // 去除不在目标字符集当中的字符
         return preg_replace("~[^\p{Han}\p{P}\p{Z}\p{M}\p{N}\p{L}\t]~u", '', $string);
     }
 
@@ -226,10 +229,13 @@ class Pinyin
 
         $dictLoader = $this->getLoader();
 
+        // 姓氏转换
         if ($isName) {
             $string = $this->convertSurname($string, $dictLoader);
         }
 
+        // 参考：http://php.net/manual/zh/functions.anonymous.php
+        // Example #3 从父作用域继承变量
         $dictLoader->map(function ($dictionary) use (&$string) {
             $string = strtr($string, $dictionary);
         });
@@ -269,14 +275,14 @@ class Pinyin
      */
     public function splitWords($pinyin, $option)
     {
+        // array_filter($array); 用于去除数组$array中的空值
         $split = array_filter(preg_split('/[^üāēīōūǖáéíóúǘǎěǐǒǔǚàèìòùǜa-z\d]+/iu', $pinyin));
-
         if ($option !== self::UNICODE) {
             foreach ($split as $index => $pinyin) {
                 $split[$index] = $this->format($pinyin, $option === self::ASCII);
             }
         }
-
+        // array_values($split); 用于重建索引
         return array_values($split);
     }
 

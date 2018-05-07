@@ -51,7 +51,6 @@ class FileDictLoader implements DictLoaderInterface
     {
         for ($i = 0; $i < 100; ++$i) {
             $segment = $this->path.'/'.sprintf($this->segmentName, $i);
-
             if (file_exists($segment)) {
                 $dictionary = (array) include $segment;
                 $callback($dictionary);
