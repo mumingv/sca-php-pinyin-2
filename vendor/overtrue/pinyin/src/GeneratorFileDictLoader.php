@@ -61,6 +61,7 @@ class GeneratorFileDictLoader implements DictLoaderInterface
             $segment = $this->path.'/'.sprintf($this->segmentName, $i);
 
             if (file_exists($segment) && is_file($segment)) {
+                // 后期静态绑定，参考：http://php.net/manual/zh/language.oop5.late-static-bindings.php
                 array_push(static::$handles, $this->openFile($segment));
             }
         }
@@ -75,6 +76,8 @@ class GeneratorFileDictLoader implements DictLoaderInterface
      */
     protected function openFile($filename, $mode = 'r')
     {
+        // 文件处理类SplFileObject，参考：http://php.net/manual/zh/class.splfileobject.php
+        // 构造函数，参考：http://php.net/manual/zh/splfileobject.construct.php
         return new SplFileObject($filename, $mode);
     }
 
@@ -86,16 +89,25 @@ class GeneratorFileDictLoader implements DictLoaderInterface
     protected function getGenerator(array $handles)
     {
         foreach ($handles as $handle) {
+            // seek函数：将文件指针定位到首行
             $handle->seek(0);
+            // eof函数：判断文件指针是否到达文件末尾
             while ($handle->eof() === false) {
+                // fgets函数：获取文件中的一行
+                // str_replace函数：去除字符串中的指定的字符（由第一个参数数组指定）
                 $string = str_replace(['\'', ' ', PHP_EOL, ','], '', $handle->fgets());
 
+                // strpos函数：查找字符串首次出现的位置
                 if (strpos($string, '=>') === false) {
                     continue;
                 }
 
+                // explode函数：使用一个字符串分割另一个字符串，返回子字符串数组
+                // list函数：把数组中的值赋给一组变量
                 list($string, $pinyin) = explode('=>', $string);
 
+                // 生成器，参考：http://php.net/manual/zh/language.generators.syntax.php
+                // 生成一个键值对数组
                 yield $string => $pinyin;
             }
         }
